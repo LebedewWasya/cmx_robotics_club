@@ -1,8 +1,8 @@
 #include <SoftwareSerial.h>// либа для блютуза
 #include "AFMotor.h" // ллиба для машины
 
-AF_DCMotor motor1(1); //
-AF_DCMotor motor2(2); //
+AF_DCMotor leftMotor(1); //
+AF_DCMotor rightMotor(2); //
 
 // верно для мотор шилда, для самой ардуино + 1 на номера п0ртов
 // RX - цифровой вывод 9 (необходимо соединить с выводом TX другого устройства)
@@ -10,10 +10,9 @@ AF_DCMotor motor2(2); //
 SoftwareSerial bluetoothSerial(9, 10);
 
 char bluetoothData[7] = {}; // полностью считанная стока.
-char shitProtectionBuffer[7] = {}; // Тут будут храниться предыдущие валидные данных, в случае битой цифры будет использоваться соотвествующая отсюда.
-int routePart = 0;
-int speedPart = 0;
-int speedDefoult = 0;
+int routePart = 0; //число от 0 до 359
+int speedPart = 0; //число от 0 до 1000 (215 умножается на x\1000)
+int speedDefoult = 40; 
 int speedLeftMotor = 0;
 int speedRightMotor = 0;
 
@@ -25,15 +24,18 @@ void setup() {
 }
 
 void loop() {
-  readIntegerFromBluetooth();
-//  shitProtection();
+//  readIntegerFromBluetooth();
+leftMotor.run(FORWARD);
+rightMotor.run(FORWARD);
+leftMotor.setSpeed(255);
+rightMotor.setSpeed(255);
 
 //  routePart = charToInt(bluetoothData[0]) * 100 + charToInt(bluetoothData[1]) * 10 + charToInt(bluetoothData[2]);
-//  speedPart = charToInt(bluetoothData[3]) * 1000 + charToInt(bluetoothData[4]) * 100 + charToInt(bluetoothData[5]) * 10 + charToInt(bluetoothData[6]);
+//  speedPart = charToInt(bluetoothData[3])* 1000 + charToInt(bluetoothData[4]) * 100 + charToInt(bluetoothData[5]) * 10 + charToInt(bluetoothData[6]);
 
 //  route();
   //  Serial.println(bluetoothData);
-  delay(5);
+  delay(2000);
   //  Serial.println("end");
 }
 
@@ -45,7 +47,7 @@ void route() {
 }
 
 void calcSpeed() {
-  speedDefoult = (int)( ((float)speedPart / (float)1000) * (float)255 );
+  speedDefoult = 40 + (int)( ((float)speedPart / (float)1000) * (float)215 );
   speedLeftMotor = speedDefoult;
   speedRightMotor = speedDefoult;
 }
@@ -60,74 +62,69 @@ void choiceCirclePart() {
       if (routePart <= 270) {
         circlePartTwo();
       } else {
-        if (routePart <= 360) {
+        if (routePart <= 359) {
           circlePartThree();
         }
       }
     }
   }
   
-  Serial.print("скорость моотора 1 ");
-  vivodIntVsosnole(speedLeftMotor);
-  Serial.println("");
-  motor1.setSpeed(speedLeftMotor);
+  //Serial.print("скорость моотора 1 ");
+  //vivodIntVsosnole(speedLeftMotor);
+  //Serial.println("");
+  leftMotor.setSpeed(speedLeftMotor);
   
-  Serial.print("скорость моотора 2 ");
-  vivodIntVsosnole(speedRightMotor);
-  Serial.println("");
-  motor2.setSpeed(speedRightMotor);
+  //Serial.print("скорость моотора 2 ");
+  //vivodIntVsosnole(speedRightMotor);
+  //Serial.println("");
+  rightMotor.setSpeed(speedRightMotor);
 }
 
 void circlePartZero() {
-  motor1.run(FORWARD);
-  Serial.println("мотор 1 FORWARD");
-  motor2.run(FORWARD);
-  Serial.println("мотор 2 FORWARD");
+  leftMotor.run(FORWARD);
+  //Serial.println("мотор 1 FORWARD");
+  rightMotor.run(FORWARD);
+  //Serial.println("мотор 2 FORWARD");
 
-
-  speedRightMotor = (int)( ((float)routePart / (float)90) * (float)speedRightMotor );
+  routePart = routePart / 10;
+  if (routePart == 9) {routePart = 8;}
+  speedRightMotor = (int)( ((float)routePart / (float)8) * (float)speedRightMotor );
 }
 
 void circlePartOne() {
-  motor1.run(FORWARD);
-  Serial.println("мотор 1 FORWARD");
-  motor2.run(FORWARD);
-  Serial.println("мотор 2 FORWARD");
+  leftMotor.run(FORWARD);
+  //Serial.println("мотор 1 FORWARD");
+  rightMotor.run(FORWARD);
+  //Serial.println("мотор 2 FORWARD");
 
-  speedLeftMotor = (int)( ((float)(180 - routePart) / (float)90) * (float)speedRightMotor );
+  routePart = (180 - routePart) / 10;
+  speedLeftMotor = (int)( ((float)(routePart) / (float)8) * (float)speedRightMotor );
 }
 
 void circlePartTwo() {
-  motor1.run(BACKWARD);
-  Serial.println("мотор 1 BACKWARD");
-  motor2.run(BACKWARD);
-  Serial.println("мотор 1 BACKWARD");
+  leftMotor.run(BACKWARD);
+  //Serial.println("мотор 1 BACKWARD");
+  rightMotor.run(BACKWARD);
+  //Serial.println("мотор 1 BACKWARD");
 
-  speedLeftMotor = (int)( ((float)(routePart - 180) / (float)90) * (float)speedRightMotor );
+  routePart = (routePart - 180) / 10;
+  if (routePart == 9) {routePart = 8;}
+  speedLeftMotor = (int)( ((float)(routePart) / (float)8) * (float)speedRightMotor );
 }
 
 void circlePartThree() {
-  motor1.run(BACKWARD);
-  Serial.println("мотор 1 BACKWARD");
-  motor2.run(BACKWARD);
-  Serial.println("мотор 1 BACKWARD");
+  leftMotor.run(BACKWARD);
+  //Serial.println("мотор 1 BACKWARD");
+  rightMotor.run(BACKWARD);
+  //Serial.println("мотор 1 BACKWARD");
 
-  speedRightMotor = (int)( ((float)(360 - routePart) / (float)90) * (float)speedRightMotor );
+  routePart = (360 - routePart) / 10;
+  speedRightMotor = (int)( ((float)(routePart) / (float)8) * (float)speedRightMotor );
 }
 
 // Все что связано со считыванием -----------------------------------------------------------------------
 // метод для считывания 7-ми значного числа с блютуза
 // если блюттуз отвалилися - 0 00 0000 - машина должна остановиться
-//void readIntegerFromBluetooth() {
-//  for (int i = 0; i < 7; i++ ) {
-//    if (bluetoothSerial.available()) {
-//      bluetoothData[i] = bluetoothSerial.read();
-//    } else {
-//      // если что то не получилось вычитать - надо остановить машину
-//      putin();
-//    }
-//  }
-//}
 
 void readIntegerFromBluetooth() {
   if (bluetoothSerial.available()) {
@@ -148,7 +145,7 @@ void readIntegerFromBluetooth() {
         ++p;
       }  
     }
-    Serial.println();
+ //   Serial.println();
   } else {
     putin();      
   }
@@ -158,110 +155,8 @@ void readIntegerFromBluetooth() {
 void putin() {
   for (int j = 0; j < 7; j++ ) {
     bluetoothData[j] = '0';
-    shitProtectionBuffer[j] = '0';
   }
 }
-
-// Защищает от не корректных данных из блютуза (появляются когда теребишьь пальчиком)
-void shitProtection() {
-  shitProtectionForZero();
-  shitProtectionForOne();
-
-  shitProtectionForDigital(2);
-
-  shitProtectionForThree();
-
-  shitProtectionForDigital(4);
-  shitProtectionForDigital(5);
-  shitProtectionForDigital(6);
-}
-
-// Защита от не корректных данных из блютуза для 0 элемента
-void shitProtectionForZero() {
-  switch (bluetoothData[0])
-  {
-    case '0':
-    case '1':
-    case '2':
-    case '3':
-      break;
-
-    default:
-      bluetoothData[0] = shitProtectionBuffer[0];
-      break;
-  }
-}
-
-// Защита от не корректных данных из блютуза для 1 элемента
-void shitProtectionForOne() {
-  switch (bluetoothData[1])
-  {
-    case '0':
-    case '1':
-    case '2':
-    case '3':
-    case '4':
-    case '5':
-      break;
-
-    case '6':
-    case '7':
-    case '8':
-    case '9':
-      if (bluetoothData[0] == '3') {
-        bluetoothData[1] = shitProtectionBuffer[1];
-      }
-
-      break;
-
-    default:
-      bluetoothData[1] = shitProtectionBuffer[1];
-      break;
-  }
-}
-
-// Защита от не корректных данных из блютуза для элемениа который должен быть просто цифровым (0 - 9)
-void shitProtectionForDigital(int i) {
-  switch (bluetoothData[i])
-  {
-    case '0':
-    case '1':
-    case '2':
-    case '3':
-    case '4':
-    case '5':
-    case '6':
-    case '7':
-    case '8':
-    case '9':
-      break;
-
-    default:
-      bluetoothData[i] = shitProtectionBuffer[i];
-      break;
-  }
-}
-
-// Защита от не корректных данных из блютуза для 3 элемента
-void shitProtectionForThree() {
-  switch (bluetoothData[3])
-  {
-    case '0':
-    case '1':
-      break;
-
-    default:
-      bluetoothData[3] = shitProtectionBuffer[3];
-      break;
-  }
-}
-
-void copyBluetoothDataToshitProtectionBuffer () {
-  for (int j = 0; j < 7; j++ ) {
-    shitProtectionBuffer[j] = bluetoothData[j];
-  }
-}
-
 
 // Утилиты -----------------------------------------------------------
 int charToInt(char ch) {
